@@ -8,17 +8,17 @@ git 'https://github.com/petrova-olena/OTP1.git'
 }
 stage('Build') {
 steps {
-bat 'mvn clean install'
+sh 'mvn clean install'
 }
 }
 stage('Test') {
 steps {
-bat 'mvn test'
+sh 'mvn test'
 }
 }
 stage('Code Coverage') {
 steps {
-bat 'mvn jacoco:report'
+sh 'mvn jacoco:report'
 }
 }
 stage('Publish Test Results') {
