@@ -42,26 +42,5 @@ pipeline {
                 jacoco()
             }
         }
-
-        stage('Build Docker Image') {
-            steps {
-                sh 'docker build -t olenape/otp1:latest .'
-            }
-        }
-
-        stage('Push Docker Image') {
-            steps {
-                withCredentials([usernamePassword(
-                    credentialsId: 'Docker_username_password',
-                    usernameVariable: 'DOCKER_USERNAME',
-                    passwordVariable: 'DOCKER_PASSWORD'
-                )]) {
-                    sh '''
-                        echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
-                        docker push "$DOCKER_USERNAME/otp1:latest"
-                    '''
-                }
-            }
-        }
     }
 }
