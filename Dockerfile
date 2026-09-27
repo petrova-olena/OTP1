@@ -2,6 +2,7 @@ FROM eclipse-temurin:17-jdk
 
 WORKDIR /app
 
-COPY target/OTP1-1.0-SNAPSHOT.jar app.jar
+COPY pom.xml .
+COPY src ./src
 
-CMD ["java", "-jar", "app.jar"]
+CMD ["java", "-jar", "target/OTP1-1.0-SNAPSHOT.jar"]
