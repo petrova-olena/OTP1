@@ -3,8 +3,6 @@ FROM eclipse-temurin:17-jdk
 WORKDIR /app
 
 COPY pom.xml .
-COPY src ./src
+COPY target/OTP1-1.0-SNAPSHOT.jar app.jar
 
-RUN mvn clean package -DskipTests
-
-CMD ["java", "-jar", "target/OTP1-1.0-SNAPSHOT.jar"]
+CMD ["java", "-jar", "app.jar"]
