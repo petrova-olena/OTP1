@@ -44,8 +44,9 @@ pipeline {
         }
 
         stage('Build Docker Image') {
-            steps {
-                sh 'docker build -t olenape/otp1:latest .'
+            steps {script {
+                withEnv(['PATH+DOCKER=C:\\Users\\Omistaja\\AppData\\Local\\Programs\\DockerDesktop\\resources\\bin']) {
+                sh "docker build -t olenape/otp1:latest ."
             }
         }
 
