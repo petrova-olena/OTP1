@@ -10,14 +10,24 @@ public class DBConnection {
 
     private static final Dotenv dotenv = Dotenv.configure().ignoreIfMissing().load();
 
+    private static String getConfig(String key) {
+        String value = System.getenv(key);
+
+        if (value == null || value.isBlank()) {
+            value = dotenv.get(key);
+        }
+
+        return value;
+    }
+
     public static Connection getConnection()
             throws SQLException {
 
-        String host = dotenv.get("DB_HOST");
-        String port = dotenv.get("DB_PORT");
-        String database = dotenv.get("DB_NAME");
-        String user = dotenv.get("DB_USER");
-        String password = dotenv.get("DB_PASSWORD");
+        String host = getConfig("DB_HOST");
+        String port = getConfig("DB_PORT");
+        String database = getConfig("DB_NAME");
+        String user = getConfig("DB_USER");
+        String password = getConfig("DB_PASSWORD");
 
         String url = String.format("jdbc:mariadb://%s:%s/%s", host, port, database);
 
