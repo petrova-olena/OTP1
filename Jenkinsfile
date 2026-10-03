@@ -45,7 +45,7 @@ pipeline {
 
         stage('Build Docker Image') {
             steps {
-                sh "docker build -t olenape/otp1:latest ."
+                sh "docker build -t olenape/temperature-converter:latest ."
             }
         }
 
@@ -58,7 +58,7 @@ pipeline {
                 )]) {
                     sh '''
                         echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
-                        docker push olenape/otp1:latest
+                        docker push olenape/temperature-converter:latest
                     '''
                 }
             }
