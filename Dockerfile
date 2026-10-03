@@ -20,7 +20,6 @@ RUN mkdir -p /javafx-sdk \
     && mv /javafx-sdk/javafx-sdk-17/lib /javafx-sdk/lib \
     && rm -rf /javafx-sdk/javafx-sdk-17 javafx.zip
 
-COPY .env .env
 COPY target/temperature-converter.jar app.jar
 
 ENV DISPLAY=host.docker.internal:0.0
