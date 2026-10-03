@@ -2,7 +2,27 @@ FROM eclipse-temurin:17-jdk
 
 WORKDIR /app
 
-COPY pom.xml .
-COPY target/OTP1-1.0-SNAPSHOT.jar app.jar
+RUN apt-get update && apt-get install -y \
+    libx11-6 \
+    libxext6 \
+    libxrender1 \
+    libxtst6 \
+    libxi6 \
+    libgtk-3-0 \
+    mesa-utils \
+    wget \
+    unzip \
+    && rm -rf /var/lib/apt/lists/*
 
-CMD ["java", "-jar", "app.jar"]
+RUN mkdir -p /javafx-sdk \
+    && wget -O javafx.zip https://download2.gluonhq.com/openjfx/17/openjfx-17_linux-x64_bin-sdk.zip \
+    && unzip javafx.zip -d /javafx-sdk \
+    && mv /javafx-sdk/javafx-sdk-17/lib /javafx-sdk/lib \
+    && rm -rf /javafx-sdk/javafx-sdk-17 javafx.zip
+
+COPY .env .env
+COPY target/temperature-converter.jar app.jar
+
+ENV DISPLAY=host.docker.internal:0.0
+
+CMD ["java", "--module-path", "/javafx-sdk/lib", "--add-modules", "javafx.controls,javafx.fxml", "-jar", "app.jar"]
