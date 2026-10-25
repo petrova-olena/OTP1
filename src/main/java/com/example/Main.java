@@ -7,6 +7,9 @@ import com.example.model.TemperatureUnit;
 import javafx.application.Application;
 import javafx.geometry.Insets;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
 import javafx.stage.Stage;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
@@ -14,8 +17,23 @@ import javafx.scene.layout.VBox;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Locale;
+import java.util.ResourceBundle;
+import java.util.Scanner;
 
 public class Main extends Application{
+    private ResourceBundle bundle;
+
+    private Label unit1Label;
+    private Label unit2Label;
+    private Label valueLabel;
+    private Label resultLabel;
+    private Label historyLabel;
+    private Button convertButton;
+    private Stage primaryStage;
+    private TableColumn<TemperatureRecord, Double> inputColumn;
+    private TableColumn<TemperatureRecord, Double> resultColumn;
+    private TableColumn<TemperatureRecord, LocalDateTime> dateColumn;
 
     public static double convertTemperature(double value, String fromUnit, String toUnit) {
         if (fromUnit.equals(toUnit)) {
@@ -30,19 +48,56 @@ public class Main extends Application{
     }
 
     public void start(Stage stage) {
-        Label unit1Label = new Label("Unit 1:");
+        this.primaryStage = stage;
+
+        bundle = ResourceBundle.getBundle("MessagesBundle", Locale.US);
+
+        HBox upHBox = new HBox(10);
+        VBox upVBox = new VBox(10);
+
+        unit1Label = new Label(bundle.getString("unit1"));
         ComboBox<String> unit1ComboBox = new ComboBox<>();
         unit1ComboBox.getItems().addAll("Celsius", "Fahrenheit");
 
-        Label unit2Label = new Label("Unit 2:");
+        unit2Label = new Label(bundle.getString("unit2"));
         ComboBox<String> unit2ComboBox = new ComboBox<>();
         unit2ComboBox.getItems().addAll("Celsius", "Fahrenheit");
 
-        Label valueLabel = new Label("Value:");
+        upVBox.getChildren().addAll(unit1Label, unit1ComboBox, unit2Label, unit2ComboBox);
+
+        Region spacer = new Region();
+        HBox.setHgrow(spacer, Priority.ALWAYS);
+
+        ComboBox<String> languageCB = new ComboBox<>();
+        languageCB.getItems().addAll("English", "Suomi", "Svenska", "日本語");
+        languageCB.setValue("English");
+
+        languageCB.setOnAction(event -> {
+
+            String language = languageCB.getValue();
+
+            switch (language) {
+                case "Suomi":
+                    updateLanguage(new Locale("fi", "FI"));
+                    break;
+                case "Svenska":
+                    updateLanguage(new Locale("sv", "SE"));
+                    break;
+                case "日本語":
+                    updateLanguage(new Locale("ja", "JP"));
+                    break;
+                default:
+                    updateLanguage(Locale.US);
+            }
+        });
+
+        upHBox.getChildren().addAll(upVBox, spacer, languageCB);
+
+        valueLabel = new Label(bundle.getString("value"));
         TextField valueTextField = new TextField();
 
-        Button convertButton = new Button("Convert");
-        Label resultLabel = new Label();
+        convertButton = new Button(bundle.getString("convert"));
+        resultLabel = new Label();
 
         TemperatureUnitDAO unitDAO = new TemperatureUnitDAO();
         TemperatureRecordDAO recordDAO = new TemperatureRecordDAO();
@@ -52,13 +107,13 @@ public class Main extends Application{
         historyTable.setPrefHeight(250);
         historyTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
 
-        TableColumn<TemperatureRecord, Double> inputColumn = new TableColumn<>("Input");
+        inputColumn = new TableColumn<>(bundle.getString("input"));
         inputColumn.setCellValueFactory(new PropertyValueFactory<>("originalValue"));
 
-        TableColumn<TemperatureRecord, Double> resultColumn = new TableColumn<>("Result");
+        resultColumn = new TableColumn<>(bundle.getString("result"));
         resultColumn.setCellValueFactory(new PropertyValueFactory<>("convertedValue"));
 
-        TableColumn<TemperatureRecord, LocalDateTime> dateColumn = new TableColumn<>("Date");
+        dateColumn = new TableColumn<>(bundle.getString("date"));
         dateColumn.setCellValueFactory(new PropertyValueFactory<>("createdAt"));
         dateColumn.setCellFactory(column ->
                 new TableCell<>() {
@@ -112,29 +167,52 @@ public class Main extends Application{
                 );
 
             } catch (NumberFormatException ex) {
-                resultLabel.setText("Invalid input");
+                resultLabel.setText(bundle.getString("invalidInput"));
 
             } catch (IllegalArgumentException ex) {
                 resultLabel.setText(ex.getMessage());
             }
         });
 
+        historyLabel = new Label(bundle.getString("history"));
         VBox root = new VBox(10,
-                unit1Label, unit1ComboBox,
-                unit2Label, unit2ComboBox,
+                upHBox,
                 valueLabel, valueTextField,
                 convertButton,
                 resultLabel,
-                new Label("Conversion History:"),
+                historyLabel,
                 historyTable
         );
         root.setPadding(new Insets(20));
         root.setSpacing(10);
 
         Scene scene = new Scene(root, 600, 500);
-        stage.setTitle("Temperature Converter");
+        stage.setTitle(bundle.getString("title"));
         stage.setScene(scene);
         stage.show();
+    }
+
+    private void updateLanguage(Locale locale) {
+
+        bundle = ResourceBundle.getBundle(
+                "MessagesBundle",
+                locale
+        );
+
+        unit1Label.setText(bundle.getString("unit1"));
+        unit2Label.setText(bundle.getString("unit2"));
+
+        valueLabel.setText(bundle.getString("value"));
+        convertButton.setText(bundle.getString("convert"));
+        historyLabel.setText(bundle.getString("history"));
+
+        inputColumn.setText(bundle.getString("input"));
+        resultColumn.setText(bundle.getString("result"));
+        dateColumn.setText(bundle.getString("date"));
+
+        primaryStage.setTitle(
+                bundle.getString("title")
+        );
     }
 
     public static void main(String[] args) {
