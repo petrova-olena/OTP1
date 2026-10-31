@@ -34,6 +34,7 @@ public class Main extends Application{
     private TableColumn<TemperatureRecord, Double> inputColumn;
     private TableColumn<TemperatureRecord, Double> resultColumn;
     private TableColumn<TemperatureRecord, LocalDateTime> dateColumn;
+    private VBox root;
 
     public static double convertTemperature(double value, String fromUnit, String toUnit) {
         if (fromUnit.equals(toUnit)) {
@@ -69,7 +70,7 @@ public class Main extends Application{
         HBox.setHgrow(spacer, Priority.ALWAYS);
 
         ComboBox<String> languageCB = new ComboBox<>();
-        languageCB.getItems().addAll("English", "Suomi", "Svenska", "日本語");
+        languageCB.getItems().addAll("English", "Suomi", "Svenska", "日本語", "العربية");
         languageCB.setValue("English");
 
         languageCB.setOnAction(event -> {
@@ -85,6 +86,9 @@ public class Main extends Application{
                     break;
                 case "日本語":
                     updateLanguage(new Locale("ja", "JP"));
+                    break;
+                case "العربية":
+                    updateLanguage(new Locale("ar", "SA"));
                     break;
                 default:
                     updateLanguage(Locale.US);
@@ -156,11 +160,16 @@ public class Main extends Application{
                     historyTable.getItems().clear();
                     historyTable.getItems().addAll(recordDAO.findAll());
                 }
+                String arrow = bundle.getLocale().getLanguage().equals("ar")
+                        ? "←"
+                        : "→";
+
                 resultLabel.setText(
                         String.format(
-                                "%.2f %s → %.2f %s",
+                                "%.2f %s %s %.2f %s",
                                 value,
                                 source.getSymbol(),
+                                arrow,
                                 result,
                                 target.getSymbol()
                         )
@@ -175,7 +184,7 @@ public class Main extends Application{
         });
 
         historyLabel = new Label(bundle.getString("history"));
-        VBox root = new VBox(10,
+        root = new VBox(10,
                 upHBox,
                 valueLabel, valueTextField,
                 convertButton,
@@ -198,6 +207,16 @@ public class Main extends Application{
                 "MessagesBundle",
                 locale
         );
+
+        if (locale.getLanguage().equals("ar")) {
+            root.setNodeOrientation(
+                    javafx.geometry.NodeOrientation.RIGHT_TO_LEFT
+            );
+        } else {
+            root.setNodeOrientation(
+                    javafx.geometry.NodeOrientation.LEFT_TO_RIGHT
+            );
+        }
 
         unit1Label.setText(bundle.getString("unit1"));
         unit2Label.setText(bundle.getString("unit2"));
