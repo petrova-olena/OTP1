@@ -61,6 +61,8 @@ Handles database connectivity.
 
 - `DBConnection`
 
+
+
 ### Business Logic Layer
 
 Implements temperature conversion functionality.
@@ -72,6 +74,39 @@ Implements temperature conversion functionality.
 Application entry point.
 
 - `Main`
+
+---
+
+## Database Localization
+
+The application implements a database-driven localization approach using language-specific columns within the `temperature_unit` table. This strategy was selected because the application supports a fixed set of five languages: English, Finnish, Swedish, Japanese, and Arabic.
+
+The `temperature_unit` table stores a separate name column for each supported language:
+
+The `temperature_unit` table stores a separate column for each supported language:
+
+```text
+temperature_unit
+--------------------------------
+id
+name_en
+name_fi
+name_sv
+name_ja
+name_ar
+symbol
+```
+
+Example data:
+
+| id | name_en | name_fi | name_sv | name_ja | name_ar | symbol |
+|----|----------|----------|----------|----------|----------|--------|
+| 1 | Celsius | Celsius | Celsius | 摂氏 | سيلسيوس | C |
+| 2 | Fahrenheit | Fahrenheit | Fahrenheit | 華氏 | فهرنهايت | F |
+
+When the user changes the application language, the system selects the appropriate localized value from the database and displays it in the user interface. The `TemperatureUnit` model provides a localization method that returns the correct name according to the active locale.
+
+This localization strategy was chosen because the application contains a very small and fixed reference dataset consisting of only two temperature units. Using separate language columns keeps the database schema simple, avoids additional translation tables and joins, and improves readability of the data. While a dedicated translation table would provide greater scalability for larger systems, the column-based approach offers a practical and efficient solution for this educational project.
 
 ---
 

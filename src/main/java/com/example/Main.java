@@ -2,6 +2,7 @@ package com.example;
 
 import com.example.dao.TemperatureRecordDAO;
 import com.example.dao.TemperatureUnitDAO;
+import com.example.database.DatabaseInitializer;
 import com.example.model.TemperatureRecord;
 import com.example.model.TemperatureUnit;
 import javafx.application.Application;
@@ -35,17 +36,27 @@ public class Main extends Application{
     private TableColumn<TemperatureRecord, Double> resultColumn;
     private TableColumn<TemperatureRecord, LocalDateTime> dateColumn;
     private VBox root;
+    private ComboBox<TemperatureUnit> unit1ComboBox;
+    private ComboBox<TemperatureUnit> unit2ComboBox;
 
-    public static double convertTemperature(double value, String fromUnit, String toUnit) {
-        if (fromUnit.equals(toUnit)) {
+    public static double convertTemperature(double value, TemperatureUnit source, TemperatureUnit target) {
+        if (source.getSymbol().equals(target.getSymbol())) {
             return value;
-        } else if (fromUnit.equals("Celsius") && toUnit.equals("Fahrenheit")) {
-            return TemperatureConverter.celsiusToFahrenheit(value);
-        } else if (fromUnit.equals("Fahrenheit") && toUnit.equals("Celsius")) {
-            return TemperatureConverter.fahrenheitToCelsius(value);
-        } else {
-            throw new IllegalArgumentException("Invalid temperature units");
         }
+
+        if (source.getSymbol().equals("C")
+                && target.getSymbol().equals("F")) {
+
+            return TemperatureConverter.celsiusToFahrenheit(value);
+        }
+
+        if (source.getSymbol().equals("F")
+                && target.getSymbol().equals("C")) {
+
+            return TemperatureConverter.fahrenheitToCelsius(value);
+        }
+
+        throw new IllegalArgumentException("Invalid temperature units");
     }
 
     public void start(Stage stage) {
@@ -57,12 +68,18 @@ public class Main extends Application{
         VBox upVBox = new VBox(10);
 
         unit1Label = new Label(bundle.getString("unit1"));
-        ComboBox<String> unit1ComboBox = new ComboBox<>();
-        unit1ComboBox.getItems().addAll("Celsius", "Fahrenheit");
-
         unit2Label = new Label(bundle.getString("unit2"));
-        ComboBox<String> unit2ComboBox = new ComboBox<>();
-        unit2ComboBox.getItems().addAll("Celsius", "Fahrenheit");
+
+        TemperatureUnitDAO unitDAO = new TemperatureUnitDAO();
+
+        unit1ComboBox = new ComboBox<>();
+        unit2ComboBox = new ComboBox<>();
+
+        unit1ComboBox.getItems().addAll(unitDAO.findAll());
+        unit2ComboBox.getItems().addAll(unitDAO.findAll());
+
+        configureComboBox(unit1ComboBox);
+        configureComboBox(unit2ComboBox);
 
         upVBox.getChildren().addAll(unit1Label, unit1ComboBox, unit2Label, unit2ComboBox);
 
@@ -103,7 +120,6 @@ public class Main extends Application{
         convertButton = new Button(bundle.getString("convert"));
         resultLabel = new Label();
 
-        TemperatureUnitDAO unitDAO = new TemperatureUnitDAO();
         TemperatureRecordDAO recordDAO = new TemperatureRecordDAO();
 
         // Create results table with history of convertions
@@ -144,14 +160,11 @@ public class Main extends Application{
         convertButton.setOnAction(e -> {
             try {
                 double value = Double.parseDouble(valueTextField.getText());
-                String fromUnit = unit1ComboBox.getValue();
-                String toUnit = unit2ComboBox.getValue();
+                TemperatureUnit source = unit1ComboBox.getValue();
+                TemperatureUnit target = unit2ComboBox.getValue();
 
-                double result = convertTemperature(value, fromUnit, toUnit);
+                double result = convertTemperature(value, source, target);
                 result = Math.round(result * 100.0) / 100.0;
-
-                TemperatureUnit source = unitDAO.findByName(fromUnit);
-                TemperatureUnit target = unitDAO.findByName(toUnit);
 
                 if (source != null && target != null) {
                     TemperatureRecord record = new TemperatureRecord(source.getId(), target.getId(), value, result);
@@ -232,6 +245,44 @@ public class Main extends Application{
         primaryStage.setTitle(
                 bundle.getString("title")
         );
+
+        configureComboBox(unit1ComboBox);
+        configureComboBox(unit2ComboBox);
+    }
+
+    private void configureComboBox(ComboBox<TemperatureUnit> comboBox) {
+
+        comboBox.setCellFactory(cb -> new ListCell<>() {
+            @Override
+            protected void updateItem(
+                    TemperatureUnit item,
+                    boolean empty
+            ) {
+                super.updateItem(item, empty);
+
+                if (empty || item == null) {
+                    setText(null);
+                } else {
+                    setText(item.getLocalizedName(bundle.getLocale()));
+                }
+            }
+        });
+
+        comboBox.setButtonCell(new ListCell<>() {
+            @Override
+            protected void updateItem(
+                    TemperatureUnit item,
+                    boolean empty
+            ) {
+                super.updateItem(item, empty);
+
+                if (empty || item == null) {
+                    setText(null);
+                } else {
+                    setText(item.getLocalizedName(bundle.getLocale()));
+                }
+            }
+        });
     }
 
     public static void main(String[] args) {
