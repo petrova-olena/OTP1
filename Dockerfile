@@ -12,6 +12,8 @@ RUN apt-get update && apt-get install -y \
     mesa-utils \
     wget \
     unzip \
+    fonts-noto-core \
+    fonts-noto-cjk \
     && rm -rf /var/lib/apt/lists/*
 
 RUN mkdir -p /javafx-sdk \
