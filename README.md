@@ -83,8 +83,6 @@ The application implements a database-driven localization approach using languag
 
 The `temperature_unit` table stores a separate name column for each supported language:
 
-The `temperature_unit` table stores a separate column for each supported language:
-
 ```text
 temperature_unit
 --------------------------------
