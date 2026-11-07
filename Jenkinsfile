@@ -13,12 +13,6 @@ pipeline {
             }
         }
 
-        stage('Debug Env') {
-            steps {
-                sh 'env | grep DB || true'
-            }
-        }
-
         stage('Build') {
             steps {
                 sh 'mvn clean install'

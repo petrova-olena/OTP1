@@ -20,8 +20,7 @@ public class DBConnection {
         return value;
     }
 
-    public static Connection getConnection()
-            throws SQLException {
+    public static Connection getConnection() throws SQLException {
 
         String host = getConfig("DB_HOST");
         String port = getConfig("DB_PORT");
@@ -31,6 +30,17 @@ public class DBConnection {
 
         String url = String.format("jdbc:mariadb://%s:%s/%s", host, port, database);
 
-        return DriverManager.getConnection(url, user, password);
+        try {
+            return DriverManager.getConnection(url, user, password);
+
+        } catch (SQLException e) {
+
+            if ("host.docker.internal".equals(host)) {
+                String localUrl = String.format("jdbc:mariadb://localhost:%s/%s", port, database);
+
+                return DriverManager.getConnection(localUrl, user, password);
+            }
+            throw e;
+        }
     }
 }

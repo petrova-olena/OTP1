@@ -19,36 +19,62 @@ class TemperatureUnitDAOTest {
     void shouldContainCelsius() {
         List<TemperatureUnit> units = dao.findAll();
 
-        boolean found = units.stream().anyMatch(u -> u.getName().equals("Celsius"));
+        boolean found = units.stream().anyMatch(u -> u.getNameEn().equals("Celsius"));
         assertTrue(found);
     }
 
     @Test
     void shouldContainFahrenheit() {
         List<TemperatureUnit> units = dao.findAll();
-        boolean found = units.stream().anyMatch(u -> u.getName().equals("Fahrenheit"));
+        boolean found = units.stream().anyMatch(u -> u.getNameEn().equals("Fahrenheit"));
         assertTrue(found);
     }
 
     @Test
-    void shouldFindCelsiusByName() {
-        TemperatureUnit unit = dao.findByName("Celsius");
+    void shouldContainSymbolC() {
+        List<TemperatureUnit> units = dao.findAll();
+        boolean found = units.stream().anyMatch(u -> u.getSymbol().equals("C"));
+        assertTrue(found);
+    }
+
+    @Test
+    void shouldContainSymbolF() {
+        List<TemperatureUnit> units = dao.findAll();
+        boolean found = units.stream().anyMatch(u -> u.getSymbol().equals("F"));
+        assertTrue(found);
+    }
+
+    @Test
+    void shouldFindCelsiusBySymbol() {
+        TemperatureUnit unit = dao.findBySymbol("C");
         assertNotNull(unit);
-        assertEquals("Celsius", unit.getName());
         assertEquals("C", unit.getSymbol());
+        assertEquals("Celsius", unit.getNameEn());
     }
 
     @Test
-    void shouldFindFahrenheitByName() {
-        TemperatureUnit unit = dao.findByName("Fahrenheit");
+    void shouldFindFahrenheitBySymbol() {
+        TemperatureUnit unit = dao.findBySymbol("F");
         assertNotNull(unit);
-        assertEquals("Fahrenheit", unit.getName());
         assertEquals("F", unit.getSymbol());
+        assertEquals("Fahrenheit", unit.getNameEn());
     }
 
     @Test
-    void shouldReturnNullForUnknownTemperatureUnit() {
-        TemperatureUnit unit = dao.findByName("Unknown");
+    void shouldReturnNullForUnknownSymbol() {
+        TemperatureUnit unit = dao.findBySymbol("X");
         assertNull(unit);
+    }
+
+    @Test
+    void shouldReturnLocalizedNames() {
+
+        TemperatureUnit unit = dao.findBySymbol("C");
+
+        assertNotNull(unit.getNameEn());
+        assertNotNull(unit.getNameFi());
+        assertNotNull(unit.getNameSv());
+        assertNotNull(unit.getNameJa());
+        assertNotNull(unit.getNameAr());
     }
 }

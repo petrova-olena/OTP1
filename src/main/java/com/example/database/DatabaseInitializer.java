@@ -8,9 +8,11 @@ public class DatabaseInitializer {
     public static void initialize() {
         try (
                 Connection conn = DBConnection.getConnection();
-                InputStream is =
-                        DatabaseInitializer.class.getResourceAsStream("/init.sql")
         ) {
+            InputStream is = DatabaseInitializer.class.getResourceAsStream("/init.sql");
+            if (is == null) {
+                throw new IllegalStateException("init.sql not found");
+            }
             String sql = new String(is.readAllBytes());
 
             for (String statement : sql.split(";")) {
