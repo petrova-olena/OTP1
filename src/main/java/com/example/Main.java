@@ -221,6 +221,14 @@ public class Main extends Application{
                 locale
         );
 
+        if (locale.getLanguage().equals("ja")) {
+            root.setStyle(
+                    "-fx-font-family: 'Noto Sans CJK JP';"
+            );
+        } else {
+            root.setStyle("");
+        }
+
         if (locale.getLanguage().equals("ar")) {
             root.setNodeOrientation(
                     javafx.geometry.NodeOrientation.RIGHT_TO_LEFT
