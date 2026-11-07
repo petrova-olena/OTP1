@@ -40,7 +40,6 @@ public class DBConnection {
 
                 return DriverManager.getConnection(localUrl, user, password);
             }
-            System.out.println("host.docker.internal unavailable, using localhost");
             throw e;
         }
     }
