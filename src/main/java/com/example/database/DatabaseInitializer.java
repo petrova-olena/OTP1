@@ -2,8 +2,13 @@ package com.example.database;
 
 import java.io.InputStream;
 import java.sql.Connection;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class DatabaseInitializer {
+    private static final Logger log = LoggerFactory.getLogger(DatabaseInitializer.class);
+
+    private DatabaseInitializer() {}
 
     public static void initialize() {
         try (
@@ -21,7 +26,7 @@ public class DatabaseInitializer {
                 }
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("error: ", e);
         }
     }
 }

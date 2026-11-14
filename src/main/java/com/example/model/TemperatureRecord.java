@@ -3,7 +3,6 @@ package com.example.model;
 import java.time.LocalDateTime;
 
 public class TemperatureRecord {
-    private int id;
     private int sourceUnitId;
     private int targetUnitId;
     private double originalValue;
