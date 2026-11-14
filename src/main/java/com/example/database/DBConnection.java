@@ -10,6 +10,8 @@ public class DBConnection {
 
     private static final Dotenv dotenv = Dotenv.configure().ignoreIfMissing().load();
 
+    private DBConnection() {}
+
     private static String getConfig(String key) {
         String value = System.getenv(key);
 

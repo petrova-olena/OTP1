@@ -2,7 +2,6 @@ package com.example;
 
 import com.example.dao.TemperatureRecordDAO;
 import com.example.dao.TemperatureUnitDAO;
-import com.example.database.DatabaseInitializer;
 import com.example.model.TemperatureRecord;
 import com.example.model.TemperatureUnit;
 import javafx.application.Application;
@@ -20,7 +19,6 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Locale;
 import java.util.ResourceBundle;
-import java.util.Scanner;
 
 public class Main extends Application{
     private ResourceBundle bundle;
@@ -59,11 +57,50 @@ public class Main extends Application{
         throw new IllegalArgumentException("Invalid temperature units");
     }
 
+    @Override
     public void start(Stage stage) {
         this.primaryStage = stage;
-
         bundle = ResourceBundle.getBundle("MessagesBundle", Locale.US);
 
+        HBox upHBox = createTopSection();
+
+        valueLabel = new Label(bundle.getString("value"));
+        TextField valueTextField = new TextField();
+
+        convertButton = new Button(bundle.getString("convert"));
+        resultLabel = new Label();
+
+        TemperatureRecordDAO recordDAO = new TemperatureRecordDAO();
+        TableView<TemperatureRecord> historyTable =
+                createHistoryTable(recordDAO);
+
+        convertButton.setOnAction(event ->
+                handleConversion(valueTextField, recordDAO, historyTable)
+        );
+
+        historyLabel = new Label(bundle.getString("history"));
+
+        root = new VBox(
+                10,
+                upHBox,
+                valueLabel,
+                valueTextField,
+                convertButton,
+                resultLabel,
+                historyLabel,
+                historyTable
+        );
+
+        root.setPadding(new Insets(20));
+        root.setSpacing(10);
+
+        Scene scene = new Scene(root, 600, 500);
+        stage.setTitle(bundle.getString("title"));
+        stage.setScene(scene);
+        stage.show();
+    }
+
+    private HBox createTopSection() {
         HBox upHBox = new HBox(10);
         VBox upVBox = new VBox(10);
 
@@ -81,137 +118,163 @@ public class Main extends Application{
         configureComboBox(unit1ComboBox);
         configureComboBox(unit2ComboBox);
 
-        upVBox.getChildren().addAll(unit1Label, unit1ComboBox, unit2Label, unit2ComboBox);
+        upVBox.getChildren().addAll(
+                unit1Label,
+                unit1ComboBox,
+                unit2Label,
+                unit2ComboBox
+        );
 
         Region spacer = new Region();
         HBox.setHgrow(spacer, Priority.ALWAYS);
 
         ComboBox<String> languageCB = new ComboBox<>();
-        languageCB.getItems().addAll("English", "Suomi", "Svenska", "日本語", "العربية");
+        languageCB.getItems().addAll(
+                "English",
+                "Suomi",
+                "Svenska",
+                "日本語",
+                "العربية"
+        );
         languageCB.setValue("English");
 
-        languageCB.setOnAction(event -> {
-
-            String language = languageCB.getValue();
-
-            switch (language) {
-                case "Suomi":
-                    updateLanguage(new Locale("fi", "FI"));
-                    break;
-                case "Svenska":
-                    updateLanguage(new Locale("sv", "SE"));
-                    break;
-                case "日本語":
-                    updateLanguage(new Locale("ja", "JP"));
-                    break;
-                case "العربية":
-                    updateLanguage(new Locale("ar", "SA"));
-                    break;
-                default:
-                    updateLanguage(Locale.US);
-            }
-        });
+        languageCB.setOnAction(event ->
+                changeLanguage(languageCB.getValue())
+        );
 
         upHBox.getChildren().addAll(upVBox, spacer, languageCB);
 
-        valueLabel = new Label(bundle.getString("value"));
-        TextField valueTextField = new TextField();
+        return upHBox;
+    }
 
-        convertButton = new Button(bundle.getString("convert"));
-        resultLabel = new Label();
+    private void changeLanguage(String language) {
+        switch (language) {
+            case "Suomi":
+                updateLanguage(new Locale("fi", "FI"));
+                break;
+            case "Svenska":
+                updateLanguage(new Locale("sv", "SE"));
+                break;
+            case "日本語":
+                updateLanguage(new Locale("ja", "JP"));
+                break;
+            case "العربية":
+                updateLanguage(new Locale("ar", "SA"));
+                break;
+            default:
+                updateLanguage(Locale.US);
+        }
+    }
 
-        TemperatureRecordDAO recordDAO = new TemperatureRecordDAO();
-
-        // Create results table with history of convertions
+    private TableView<TemperatureRecord> createHistoryTable(
+            TemperatureRecordDAO recordDAO
+    ) {
         TableView<TemperatureRecord> historyTable = new TableView<>();
+
         historyTable.setPrefHeight(250);
-        historyTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        historyTable.setColumnResizePolicy(
+                TableView.CONSTRAINED_RESIZE_POLICY
+        );
 
         inputColumn = new TableColumn<>(bundle.getString("input"));
-        inputColumn.setCellValueFactory(new PropertyValueFactory<>("originalValue"));
+        inputColumn.setCellValueFactory(
+                new PropertyValueFactory<>("originalValue")
+        );
 
         resultColumn = new TableColumn<>(bundle.getString("result"));
-        resultColumn.setCellValueFactory(new PropertyValueFactory<>("convertedValue"));
+        resultColumn.setCellValueFactory(
+                new PropertyValueFactory<>("convertedValue")
+        );
 
         dateColumn = new TableColumn<>(bundle.getString("date"));
-        dateColumn.setCellValueFactory(new PropertyValueFactory<>("createdAt"));
-        dateColumn.setCellFactory(column ->
-                new TableCell<>() {
+        dateColumn.setCellValueFactory(
+                new PropertyValueFactory<>("createdAt")
+        );
+        dateColumn.setCellFactory(this::createDateCell);
 
-                    @Override
-                    protected void updateItem(
-                            LocalDateTime item,
-                            boolean empty
-                    ) {
-                        super.updateItem(item, empty);
-
-                        if (empty || item == null) {
-                            setText(null);
-                        } else {
-                            setText(item.format(DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm")));
-                        }
-                    }
-                }
+        historyTable.getColumns().addAll(
+                inputColumn,
+                resultColumn,
+                dateColumn
         );
 
-        historyTable.getColumns().addAll(inputColumn, resultColumn, dateColumn );
         historyTable.getItems().addAll(recordDAO.findAll());
 
-        convertButton.setOnAction(e -> {
-            try {
-                double value = Double.parseDouble(valueTextField.getText());
-                TemperatureUnit source = unit1ComboBox.getValue();
-                TemperatureUnit target = unit2ComboBox.getValue();
+        return historyTable;
+    }
 
-                double result = convertTemperature(value, source, target);
-                result = Math.round(result * 100.0) / 100.0;
+    private TableCell<TemperatureRecord, LocalDateTime> createDateCell(
+            TableColumn<TemperatureRecord, LocalDateTime> column
+    ) {
+        return new TableCell<>() {
 
-                if (source != null && target != null) {
-                    TemperatureRecord record = new TemperatureRecord(source.getId(), target.getId(), value, result);
+            @Override
+            protected void updateItem(LocalDateTime item, boolean empty) {
+                super.updateItem(item, empty);
 
-                    recordDAO.save(record);
-                    historyTable.getItems().clear();
-                    historyTable.getItems().addAll(recordDAO.findAll());
+                if (empty || item == null) {
+                    setText(null);
+                } else {
+                    setText(
+                            item.format(
+                                    DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm")
+                            )
+                    );
                 }
-                String arrow = bundle.getLocale().getLanguage().equals("ar")
-                        ? "←"
-                        : "→";
-
-                resultLabel.setText(
-                        String.format(
-                                "%.2f %s %s %.2f %s",
-                                value,
-                                source.getSymbol(),
-                                arrow,
-                                result,
-                                target.getSymbol()
-                        )
-                );
-
-            } catch (NumberFormatException ex) {
-                resultLabel.setText(bundle.getString("invalidInput"));
-
-            } catch (IllegalArgumentException ex) {
-                resultLabel.setText(ex.getMessage());
             }
-        });
+        };
+    }
 
-        historyLabel = new Label(bundle.getString("history"));
-        root = new VBox(10,
-                upHBox,
-                valueLabel, valueTextField,
-                convertButton,
-                resultLabel,
-                historyLabel,
-                historyTable
-        );
-        root.setPadding(new Insets(20));
-        root.setSpacing(10);
+    private void handleConversion(
+            TextField valueTextField,
+            TemperatureRecordDAO recordDAO,
+            TableView<TemperatureRecord> historyTable
+    ) {
+        try {
+            double value = Double.parseDouble(valueTextField.getText());
 
-        Scene scene = new Scene(root, 600, 500);
-        stage.setTitle(bundle.getString("title"));
-        stage.setScene(scene);
-        stage.show();
+            TemperatureUnit source = unit1ComboBox.getValue();
+            TemperatureUnit target = unit2ComboBox.getValue();
+
+            double result = convertTemperature(value, source, target);
+            result = Math.round(result * 100.0) / 100.0;
+
+            if (source != null && target != null) {
+                TemperatureRecord temperatureRecord =
+                        new TemperatureRecord(
+                                source.getId(),
+                                target.getId(),
+                                value,
+                                result
+                        );
+
+                recordDAO.save(temperatureRecord);
+
+                historyTable.getItems().clear();
+                historyTable.getItems().addAll(recordDAO.findAll());
+            }
+
+            String arrow = bundle.getLocale().getLanguage().equals("ar")
+                    ? "←"
+                    : "→";
+
+            resultLabel.setText(
+                    String.format(
+                            "%.2f %s %s %.2f %s",
+                            value,
+                            source.getSymbol(),
+                            arrow,
+                            result,
+                            target.getSymbol()
+                    )
+            );
+
+        } catch (NumberFormatException ex) {
+            resultLabel.setText(bundle.getString("invalidInput"));
+
+        } catch (IllegalArgumentException ex) {
+            resultLabel.setText(ex.getMessage());
+        }
     }
 
     private void updateLanguage(Locale locale) {

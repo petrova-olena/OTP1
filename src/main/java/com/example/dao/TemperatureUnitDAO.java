@@ -3,6 +3,8 @@ package com.example.dao;
 import com.example.database.DBConnection;
 import com.example.model.TemperatureUnit;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -10,6 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class TemperatureUnitDAO {
+    private static final Logger log = LoggerFactory.getLogger(TemperatureUnitDAO.class);
 
     public List<TemperatureUnit> findAll() {
 
@@ -49,7 +52,7 @@ public class TemperatureUnitDAO {
             }
 
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("error: ", e);
         }
 
         return units;
@@ -93,7 +96,7 @@ public class TemperatureUnitDAO {
             }
 
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("error: ", e);
         }
 
         return null;
